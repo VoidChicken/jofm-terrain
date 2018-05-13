@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 
-public class PlayerMovementScript : MonoBehaviour
+public class PlayerMovementScript : NetworkBehaviour
 {
 
     [SerializeField]
@@ -17,22 +18,54 @@ public class PlayerMovementScript : MonoBehaviour
     bool isJumping = false;
 
     private Rigidbody2D rb;
+    private SpriteRenderer playerSprite;
+
+    [SyncVar(hook = "ServerFlipSprite")]
+    private float flipSprite = 0;
+
     // Use this for initialization
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerSprite = GetComponentInChildren<SpriteRenderer>();
     }
 
     // Update is called once per frame
     void Update()
     {
         horizontal = Input.GetAxisRaw("Horizontal") * Time.deltaTime * playerSpeed;
+        FlipSprite();
 
         if (Input.GetButtonDown("Jump"))
             isJumping = true;
 
         if (Input.GetKeyDown("i"))
-            GetComponent<CharacterStats>().CmdAttack(gameObject);
+            GetComponent<CharacterStats>().AttackObject(gameObject);
+    }
+
+    [Client]
+    private void ServerFlipSprite(float flip)
+    {
+        playerSprite.transform.rotation = Quaternion.Euler(0, flip, 0);
+    }
+
+    [Client]
+    private void FlipSprite()
+    {
+        if (horizontal < 0)
+            playerSprite.transform.rotation = Quaternion.Euler(0, 180, 0);
+        else if (horizontal > 0)
+            playerSprite.transform.rotation = Quaternion.Euler(0, 0, 0);
+
+        //Make a Server-side Flip
+        CmdFlipSprite(playerSprite.transform.rotation.eulerAngles.y);
+    }
+
+    [Server]
+    [Command]
+    private void CmdFlipSprite(float flip)
+    {
+        flipSprite = flip;
     }
 
     private void FixedUpdate()
