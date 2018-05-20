@@ -22,10 +22,10 @@ public class CharacterStats : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-        
+
         //If a Player already connected we need to update OUR instance of TMP to show their current health
         //According to Unity Docs _currentHealth should already be SyncVar'd by now...
-        if (isClient)
+        if (isClient && !isServer)
         {
             UpdateHealthStatusText(_currentHealth);
         }
@@ -35,7 +35,14 @@ public class CharacterStats : NetworkBehaviour
     {
         Setup();
         UpdateHealthStatusText(_currentHealth);
-        CmdUpdateVars(_currentHealth,damage);
+        CmdUpdateVars(_currentHealth, damage);
+    }
+
+    public override void OnStartServer()
+    {
+        //Setup NPC Stats
+        if (!isClient)
+            Setup();
     }
 
     [Command]
@@ -66,23 +73,16 @@ public class CharacterStats : NetworkBehaviour
         UpdateHealthStatusText(_currentHealth);
     }
 
-    [Client]
+    
     public virtual void Setup()
     {
-        SetDefaults();
-    }
-
-    [Client]
-    void SetDefaults()
-    {
         _currentHealth = maxHealth;
-        damage.baseValue = 10;
     }
 
     [Server]
     public void CheckDeath(int dmg)
     {
-        
+
     }
 
     [Client]
@@ -92,7 +92,7 @@ public class CharacterStats : NetworkBehaviour
         {
             Debug.LogErrorFormat("{0} should be dead but isn't", name);
             return;
-        }            
+        }
 
         dmg = Mathf.Clamp(dmg, 0, int.MaxValue);
         _currentHealth -= dmg;

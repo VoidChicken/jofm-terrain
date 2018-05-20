@@ -2,18 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Attackable : MonoBehaviour {
+public class Attackable : MonoBehaviour
+{
     [TagSelector]
     public List<string> enemyTags = new List<string>();
 
-    public bool IsAnEnemy(List<string> tags)
+    public bool IsAnEnemy(string tag)
     {
-        for(int i = 0; i < tags.Count; i++)
-        {
-            if (enemyTags.Contains(tags[i]))
-                return true;
-        }
-        return false;
+        return enemyTags.Contains(tag);
     }
 
     public List<string> GetMyEnemies()

@@ -7,16 +7,20 @@ public class HitBoxScript : MonoBehaviour {
 
     private void Start()
     {
-        //May want to change the "root" assumption at some point
+        //TODO: May want to change the "root" assumption at some point
         parent = transform.root.GetComponent<Attackable>();
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
+
+        Debug.Log(name + " triggered OnTriggerEnter with " + collision.name);
         Attackable target = collision.gameObject.GetComponent<Attackable>();
         if (target)
-            if (target.IsAnEnemy(parent.GetMyEnemies()))
+            if (parent.IsAnEnemy(target.tag))
+            {
+                Debug.LogFormat("{0} is attacking {1} with {2} dmg", parent.name, target.name, parent.GetComponent<CharacterStats>().damage.GetValue());
                 GetComponentInParent<CharacterStats>().AttackObject(collision.gameObject);
-
+            }
     }
 }
